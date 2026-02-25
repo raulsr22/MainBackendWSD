@@ -1,19 +1,33 @@
-// main-backend/src/users/entities/user.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserRole {
-  ADMIN = 'admin',    // Rol con permisos globales [cite: 45]
-  USER = 'user',      // Rol con permisos estándar [cite: 46]
+  ADMIN = 'admin', 
+  USER = 'user',      
 }
 
+@Entity('users') 
 export class User {
+  @PrimaryGeneratedColumn('uuid')
   id: string;
-  email: string;        
-  passwordHash: string;  
-  role: UserRole;        
-  
-  balance: number;       
-  
-  isActive: boolean;     
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  passwordHash: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER
+  })
+  role: UserRole; 
+
+  @Column({ default: 500 })
+  balance: number;
+
+  @Column({ default: true })
+  isActive: boolean;
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

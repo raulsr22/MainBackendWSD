@@ -8,7 +8,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'TU_PALABRA_SECRETA_SUPER_SEGURA', // Debe ser la misma que pusiste en auth.module.ts
+      secretOrKey: 'timebank_jwt_token123456', // Debe ser la misma que pusiste en auth.module.ts
     });
   }
 

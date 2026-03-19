@@ -10,6 +10,9 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ nullable: true })
+  fullName: string;
+  
   @Column({ unique: true })
   email: string;
 

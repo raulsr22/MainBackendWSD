@@ -17,6 +17,7 @@ async create(createUserDto: CreateUserDto): Promise<User> {
       const hashedPassword = await this.hashPassword(createUserDto.password);
       
       const newUser = this.usersRepository.create({
+        fullName: createUserDto.fullName,
         email: createUserDto.email,
         passwordHash: hashedPassword,
       });

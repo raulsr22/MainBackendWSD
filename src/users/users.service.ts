@@ -4,6 +4,7 @@ import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -44,5 +45,18 @@ async create(createUserDto: CreateUserDto): Promise<User> {
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find();
+  }
+
+  async toggleUserActiveStatus(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Invertimos el estado actual (de true a false, o de false a true)
+    user.isActive = !user.isActive;
+    
+    return await this.usersRepository.save(user);
   }
 }

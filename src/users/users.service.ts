@@ -41,4 +41,8 @@ async create(createUserDto: CreateUserDto): Promise<User> {
     const salt = await bcrypt.genSalt(10);
     return bcrypt.hash(password, salt);
   }
+
+  async findAll(): Promise<User[]> {
+    return await this.usersRepository.find();
+  }
 }

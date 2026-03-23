@@ -26,6 +26,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tu cuenta ha sido bloqueada por un administrador.');
+    }
+
     const payload = { sub: user.id, email: user.email, role: user.role };
     
     return {

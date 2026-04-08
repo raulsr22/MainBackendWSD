@@ -1,4 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { OneToMany } from 'typeorm';
+import { Service } from '../../services/entities/service.entity';
 
 export enum UserRole {
   ADMIN = 'admin', 
@@ -31,6 +33,9 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
+  
+  @OneToMany(() => Service, (service) => service.provider)
+  services: Service[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

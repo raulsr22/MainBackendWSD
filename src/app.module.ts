@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   imports: [
@@ -12,13 +13,13 @@ import { AuthModule } from './auth/auth.module';
       type: 'mysql',
       host: 'localhost', 
       port: 3306,
-      username: 'root', 
-      password: '1234', 
+      username: 'WSD', 
+      password: 'WSD', 
       database: 'wsd',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }), 
-    AuthModule
+    AuthModule, ServicesModule
   ],
   controllers: [AppController],
   providers: [AppService],

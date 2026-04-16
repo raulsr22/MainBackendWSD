@@ -21,18 +21,30 @@ export class ServicesService {
     return await this.servicesRepository.save(newService);
   }
 
-  async findAllActive(): Promise<Service[]> {
-    // Solo devolvemos los servicios activos y, además, incluimos los datos de quién lo ofrece
-    return await this.servicesRepository.find({
-      where: { status: ServiceStatus.ACTIVE },
-      relations: ['provider'],
-      select: {
-        provider: {
-          id: true,
-          fullName: true, // Solo mandamos el ID y el nombre
-        }
-      }
-    });
+  async findAllActive(searchTerm?: string, maxPrice?: number): Promise<Service[]> {
+    const query = this.servicesRepository.createQueryBuilder('service')
+      .leftJoin('service.provider', 'provider')
+      .select([
+        'service.id', 'service.title', 'service.description', 
+        'service.price', 'service.status', 'service.createdAt',
+        'provider.id', 'provider.fullName'
+      ])
+      .where('service.status = :status', { status: ServiceStatus.ACTIVE });
+
+    if (searchTerm) {
+      query.andWhere(
+        '(LOWER(service.title) LIKE LOWER(:search) OR LOWER(service.description) LIKE LOWER(:search))',
+        { search: `%${searchTerm}%` }
+      );
+    }
+
+    if (maxPrice) {
+      query.andWhere('service.price <= :maxPrice', { maxPrice });
+    }
+
+    query.orderBy('service.createdAt', 'DESC');
+
+    return await query.getMany();
   }
 
   async findOne(id: string): Promise<Service> {
@@ -71,4 +83,10 @@ export class ServicesService {
     service.status = ServiceStatus.CANCELLED;
     await this.servicesRepository.save(service);
   }
+
+  async findMyServices(userId: string): Promise<Service[]> {
+  return await this.servicesRepository.find({
+    where: { provider: { id: userId } },
+  });
+}
 }

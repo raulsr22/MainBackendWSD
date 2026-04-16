@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request, Patch, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Request, Patch, Delete, Query } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -17,8 +17,17 @@ export class ServicesController {
 
   // Ruta: GET /api/services/
   @Get()
-  async findAll() {
-    return await this.servicesService.findAllActive();
+  async findAll(@Query('search') search?: string, @Query('maxPrice') maxPrice?: string) {
+    return await this.servicesService.findAllActive(
+      search, 
+      maxPrice ? +maxPrice : undefined
+    );
+  }
+
+  @Get('my-services')
+  @UseGuards(JwtAuthGuard)
+  async getMyServices(@Request() req) {
+    return await this.servicesService.findMyServices(req.user.id);
   }
 
   // Ruta: GET /api/services/:id

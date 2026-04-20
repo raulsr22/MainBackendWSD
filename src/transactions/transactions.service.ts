@@ -27,10 +27,11 @@ export class TransactionsService {
       });
 
       if (!sender || !receiver) throw new BadRequestException('Usuario no encontrado.');
-      if (sender.balance < amount) throw new BadRequestException('Saldo insuficiente. Necesitas más Time Credits.');
+      if (Number(sender.balance) < Number(amount)) throw new BadRequestException('Saldo insuficiente. Necesitas más Time Credits.');
 
-      sender.balance -= amount;
-      receiver.balance += amount;
+      // AQUÍ ESTÁ LA MAGIA: Forzamos la conversión a Number para evitar que se peguen como texto
+      sender.balance = Number(sender.balance) - Number(amount);
+      receiver.balance = Number(receiver.balance) + Number(amount);
 
       await queryRunner.manager.save(sender);
       await queryRunner.manager.save(receiver);
@@ -38,7 +39,7 @@ export class TransactionsService {
       const transaction = queryRunner.manager.create(Transaction, {
         sender: { id: senderId },
         receiver: { id: receiverId },
-        amount,
+        amount: Number(amount),
         concept,
         relatedService: serviceId ? { id: serviceId } : undefined
       });

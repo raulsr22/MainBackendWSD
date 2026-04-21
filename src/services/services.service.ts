@@ -72,14 +72,13 @@ export class ServicesService {
     return await this.servicesRepository.save(service);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
+  async remove(id: string, userId: string, role: string): Promise<void> {
     const service = await this.findOne(id);
 
-    if (service.provider.id !== userId) {
+    if (service.provider.id !== userId && role !== 'admin') {
       throw new ForbiddenException('No tienes permiso para eliminar este servicio.');
     }
-
-    // En lugar de usar .remove() y borrarlo físicamente de la base de datos, es mejor cambiar su estado a CANCELLED para mantener el historial.
+    
     service.status = ServiceStatus.CANCELLED;
     await this.servicesRepository.save(service);
   }

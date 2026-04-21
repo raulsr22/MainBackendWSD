@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,5 +24,14 @@ export class TransactionsController {
   @Get('history')
   async getHistory(@Request() req) {
     return await this.transactionsService.getUserHistory(req.user.id);
+  }
+
+  // Ruta: GET /api/transactions/all (Solo admins)
+  @Get('all')
+  async getAllTransactions(@Request() req) {
+    if (req.user.role !== 'admin') {
+      throw new ForbiddenException('Acceso denegado: Solo administradores');
+    }
+    return await this.transactionsService.getAllTransactions();
   }
 }

@@ -29,7 +29,6 @@ export class TransactionsService {
       if (!sender || !receiver) throw new BadRequestException('Usuario no encontrado.');
       if (Number(sender.balance) < Number(amount)) throw new BadRequestException('Saldo insuficiente. Necesitas más Time Credits.');
 
-      // AQUÍ ESTÁ LA MAGIA: Forzamos la conversión a Number para evitar que se peguen como texto
       sender.balance = Number(sender.balance) - Number(amount);
       receiver.balance = Number(receiver.balance) + Number(amount);
 
@@ -63,6 +62,17 @@ export class TransactionsService {
         { sender: { id: userId } },
         { receiver: { id: userId } }
       ],
+      relations: ['sender', 'receiver', 'relatedService'],
+      order: { createdAt: 'DESC' },
+      select: {
+        sender: { id: true, fullName: true },
+        receiver: { id: true, fullName: true }
+      }
+    });
+  }
+
+  async getAllTransactions() {
+    return await this.dataSource.getRepository(Transaction).find({
       relations: ['sender', 'receiver', 'relatedService'],
       order: { createdAt: 'DESC' },
       select: {

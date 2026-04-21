@@ -43,13 +43,12 @@ export class ServicesController {
     @Body() updateServiceDto: UpdateServiceDto, 
     @Request() req
   ) {
-    // Le pasamos el ID del servicio a editar, los nuevos datos, y quién lo está intentando editar
     return await this.servicesService.update(id, updateServiceDto, req.user.id);
   }
 
   // Ruta: DELETE /api/services/:id
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
-    return await this.servicesService.remove(id, req.user.id);
+    return await this.servicesService.remove(id, req.user.id, req.user.role);
   }
 }

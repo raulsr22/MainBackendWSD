@@ -9,7 +9,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ServiceRequest, Service]),
-    TransactionsModule // Importamos el módulo de tu compañero para poder usar sus pagos
+    TransactionsModule
   ],
   controllers: [RequestsController],
   providers: [RequestsService],

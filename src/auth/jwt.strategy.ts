@@ -8,13 +8,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'timebank_jwt_token123456', // Debe ser la misma que pusiste en auth.module.ts
+      secretOrKey: 'timebank_jwt_token123456',
     });
   }
 
-  // NestJS ejecutará esto automáticamente si el token es válido
   async validate(payload: any) {
-    // Esto inyectará el 'user' en el objeto request (req.user)
     return { id: payload.sub, email: payload.email, role: payload.role };
   }
 }

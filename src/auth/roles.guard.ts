@@ -14,14 +14,12 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // Si la ruta no exige ningún rol específico, le dejamos pasar
     if (!requiredRoles) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
 
-    // Comprobamos si el rol del usuario está en la lista de roles permitidos
     return requiredRoles.some((role) => user?.role === role);
   }
 }

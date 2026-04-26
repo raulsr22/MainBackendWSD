@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ServicesModule } from './services/services.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { RequestsModule } from './requests/requests.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { RequestsModule } from './requests/requests.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }), 
-    AuthModule, ServicesModule, TransactionsModule, RequestsModule
+    AuthModule, ServicesModule, TransactionsModule, RequestsModule, PaymentsModule
   ],
   controllers: [AppController],
   providers: [AppService],

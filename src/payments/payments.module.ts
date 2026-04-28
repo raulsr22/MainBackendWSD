@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { User } from '../users/entities/user.entity';
+import { Transaction } from '../transactions/entities/transaction.entity';
 
 @Module({
-  // Importamos la entidad User para poder modificar el saldo
-  imports: [TypeOrmModule.forFeature([User])], 
+  imports: [TypeOrmModule.forFeature([User, Transaction])], 
   providers: [PaymentsService],
-  controllers: [PaymentsController]
+  controllers: [PaymentsController],
+  exports: [PaymentsService]
 })
 export class PaymentsModule {}

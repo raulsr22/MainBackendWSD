@@ -32,13 +32,13 @@ export class RequestsService {
   async getMyRequests(userId: string) {
     return await this.requestRepo.find({
       where: [ { requester: { id: userId } }, { provider: { id: userId } } ],
-      relations: ['requester', 'provider', 'service'],
+      relations: ['requester', 'provider', 'service', 'review'],
       order: { createdAt: 'DESC' }
     });
   }
 
   async updateStatus(userId: string, requestId: string, newStatus: RequestStatus) {
-    const request = await this.requestRepo.findOne({ where: { id: requestId }, relations: ['requester', 'provider', 'service'] });
+    const request = await this.requestRepo.findOne({ where: { id: requestId }, relations: ['requester', 'provider', 'service', 'review'] });
     if (!request) throw new NotFoundException('Solicitud no encontrada');
 
     if ((newStatus === RequestStatus.ACCEPTED || newStatus === RequestStatus.REJECTED) && request.provider.id !== userId) {
@@ -61,7 +61,7 @@ export class RequestsService {
 
   async getAllRequests() {
     return await this.requestRepo.find({
-      relations: ['requester', 'provider', 'service'],
+      relations: ['requester', 'provider', 'service', 'review'],
       order: { createdAt: 'DESC' }
     });
   }

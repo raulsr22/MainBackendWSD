@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToOne, } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Service } from '../../services/entities/service.entity';
 import { RequestStatus } from '../enums/request-status.enum';
+import { Review } from '../../reviews/entities/review.entity';
 
 @Entity('service_requests')
 export class ServiceRequest {
@@ -28,4 +29,7 @@ export class ServiceRequest {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @OneToOne(() => Review, (review) => review.request, { eager: true })
+  review!: Review;
 }

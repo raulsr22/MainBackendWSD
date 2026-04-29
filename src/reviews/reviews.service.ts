@@ -47,7 +47,13 @@ export class ReviewsService {
       request: request
     });
 
-    return await this.reviewRepository.save(review);
+    const savedReview = await this.reviewRepository.save(review);
+
+    // Le decimos a la petición que ahora tiene esta review y guardamos la petición
+    request.review = savedReview;
+    await this.requestRepository.save(request);
+
+    return savedReview;
   }
 
   // Para mostrar las estrellas en el Marketplace

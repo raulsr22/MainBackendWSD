@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToOne, } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Service } from '../../services/entities/service.entity';
 import { RequestStatus } from '../enums/request-status.enum';
@@ -31,5 +31,6 @@ export class ServiceRequest {
   updatedAt!: Date;
 
   @OneToOne(() => Review, (review) => review.request, { eager: true })
+  @JoinColumn()
   review!: Review;
 }

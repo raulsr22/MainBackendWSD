@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Service } from '../../services/entities/service.entity';
 import { ServiceRequest } from '../../requests/entities/request.entity';
@@ -25,7 +25,7 @@ export class Review {
   @JoinColumn({ name: 'serviceId' })
   service!: Service; 
 
-  @ManyToOne(() => ServiceRequest)
+  @OneToOne(() => ServiceRequest, (request) => request.review)
   @JoinColumn({ name: 'requestId' })
   request!: ServiceRequest; 
 }

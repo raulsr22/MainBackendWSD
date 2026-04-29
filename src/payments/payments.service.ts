@@ -8,13 +8,15 @@ import { Transaction } from '../transactions/entities/transaction.entity';
 @Injectable()
 export class PaymentsService {
   private stripe: any;
+  private endpointSecret = 'whsec_b86c343353500f49b4fa2d6746771c056164b05fce4cb1ea84fd5a532ef75938'; 
 
+  
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>, 
     @InjectRepository(Transaction) private transactionRepository: Repository<Transaction>
   ) {
-    this.stripe = new Stripe('sk_test_51SIV1lI7tP0Sy3naQmhjJb9ktpoE8BEKf4ourw5g0r42ibYE5MqOfQbSHM8ze0T4t3G7I4UFw0YgJ4LKVFO6TTmf00SjaahalK', {
-      apiVersion: '2026-04-22.dahlia', 
+    this.stripe = new Stripe('sk_test_51SIV1H0VZT5n6PNK2NnkDPgDoWeEelRIF5gKevjpAf1MPzZZpTBkXZasZPBJwSYUyGQAnXzwMgwbLT8lRSovMT4n00UrSnnKqB', {
+      apiVersion: '2020-08-27' as any,
     });
   }
 
@@ -32,7 +34,6 @@ export class PaymentsService {
             quantity: 1,
         }],
         mode: 'payment',
-        // ATENCIÓN AQUÍ: Le decimos a Stripe que nos devuelva el ID de la sesión en la URL
         success_url: `http://localhost:4200/profile?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `http://localhost:4200/profile?payment=cancelled`,
         metadata: { userId, amountOfTC: amountOfTC.toString() }
@@ -43,39 +44,61 @@ export class PaymentsService {
     }
   }
 
-  // Angular nos pasa el ID de la URL y verificamos si es real
+  private async processSuccessfulCheckout(session: any) {
+    const userId = session.metadata.userId;
+    const amountToAdd = Number(session.metadata.amountOfTC);
+    const concept = `Stripe Wallet Recharge (Ref: ${session.id})`; 
+
+    const existingTx = await this.transactionRepository.findOne({ where: { concept } });
+    if (existingTx) return { success: true, message: 'Pago ya procesado previamente' };
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    user.balance = Number(user.balance) + amountToAdd;
+    await this.userRepository.save(user);
+
+    const transaction = this.transactionRepository.create({
+      amount: amountToAdd,
+      concept: concept,
+      sender: { id: userId } as any, 
+      receiver: user,
+    });
+    await this.transactionRepository.save(transaction);
+
+    return { success: true, newBalance: user.balance, message: `Se han sumado ${amountToAdd} TC` };
+  }
+
   async verifyPayment(sessionId: string, userId: string) {
     try {
-      // 1. Le preguntamos a Stripe por este ticket
       const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-
-      // 2. Comprobamos si realmente está pagado
       if (session.payment_status === 'paid') {
-        const amountToAdd = Number(session.metadata.amountOfTC);
-        
-        // 3. Buscamos al usuario y le sumamos el saldo
-        const user = await this.userRepository.findOne({ where: { id: userId } });
-        if (!user) throw new NotFoundException('Usuario no encontrado');
-
-        user.balance = Number(user.balance) + amountToAdd;
-        await this.userRepository.save(user);
-
-        const transaction = this.transactionRepository.create({
-          amount: amountToAdd,
-          concept: `Stripe Wallet Recharge (Ref: ${session.id.substring(0, 15)}...)`,
-          sender: { id: userId } as any, // En recargas, el "emisor" técnico es el sistema o el propio user
-          receiver: user,
-          // relatedService se queda como null porque es una recarga, no un servicio
-        });
-
-        await this.transactionRepository.save(transaction);
-
-        return { success: true, newBalance: user.balance, message: `Se han sumado ${amountToAdd} TC` };
+        return await this.processSuccessfulCheckout(session);
       } else {
         throw new BadRequestException('El pago no se ha completado');
       }
     } catch (error) {
       throw new BadRequestException('Error al verificar el pago');
     }
+  }
+
+  async handleWebhook(signature: string, rawBody: Buffer) {
+    let event;
+
+    try {
+      event = this.stripe.webhooks.constructEvent(rawBody, signature, this.endpointSecret);
+    } catch (err: any) {
+      throw new BadRequestException(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      
+      if (session.payment_status === 'paid') {
+        await this.processSuccessfulCheckout(session);
+      }
+    }
+
+    return { received: true };
   }
 }

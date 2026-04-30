@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Request, ForbiddenException, Patch, Delete } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -26,5 +26,26 @@ export class ReviewsController {
   @Get('service/:serviceId')
   async getByService(@Param('serviceId') serviceId: string) {
     return this.reviewsService.findByService(serviceId);
+  }
+
+  @Get('all')
+  @UseGuards(JwtAuthGuard)
+  async getAllReviews(@Request() req) {
+    if (req.user.role !== 'admin') throw new ForbiddenException('Admin only');
+    return this.reviewsService.findAll();
+  }
+
+  @Patch(':id/censor')
+  @UseGuards(JwtAuthGuard)
+  async censorReview(@Request() req, @Param('id') id: string) {
+    if (req.user.role !== 'admin') throw new ForbiddenException('Admin only');
+    return this.reviewsService.censorReview(id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async deleteReview(@Request() req, @Param('id') id: string) {
+    if (req.user.role !== 'admin') throw new ForbiddenException('Admin only');
+    return this.reviewsService.deleteReview(id);
   }
 }

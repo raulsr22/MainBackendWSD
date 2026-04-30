@@ -28,7 +28,7 @@ export class User {
   })
   role: UserRole; 
 
-  @Column({ default: 500 })
+  @Column({ default: 0 })
   balance: number;
 
   @Column({ default: true })

@@ -10,32 +10,32 @@ export enum UserRole {
 @Entity('users') 
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id?: string;
 
   @Column({ nullable: true })
-  fullName: string;
+  fullName?: string;
   
   @Column({ unique: true })
-  email: string;
+  email?: string;
 
   @Column()
-  passwordHash: string;
+  passwordHash?: string;
 
   @Column({
     type: 'enum',
     enum: UserRole,
     default: UserRole.USER
   })
-  role: UserRole; 
+  role?: UserRole; 
 
   @Column({ default: 0 })
-  balance: number;
+  balance?: number;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive?: boolean;
   
   @OneToMany(() => Service, (service) => service.provider)
-  services: Service[];
+  services?: Service[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

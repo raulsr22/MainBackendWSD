@@ -21,6 +21,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
+    // Añadimos una validación previa para asegurar que el hash existe
+    if (!user.passwordHash) {
+      return false; 
+    }
     const isMatch = await bcrypt.compare(pass, user.passwordHash);
     if (!isMatch) {
       throw new UnauthorizedException('Credenciales incorrectas');

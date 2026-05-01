@@ -45,6 +45,9 @@ export class RequestsService {
       throw new BadRequestException('Solo el proveedor puede aceptar o rechazar');
     }
 
+    if (!request.requester?.id || !request.provider?.id || !request.service?.id) {
+      throw new BadRequestException('Incomplete request data: missing IDs for transaction');
+    }
     if (newStatus === RequestStatus.COMPLETED && request.status !== RequestStatus.COMPLETED) {
       await this.transactionsService.transferCredits(
         request.requester.id, 

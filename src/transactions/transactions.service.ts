@@ -8,7 +8,7 @@ export class TransactionsService {
   constructor(private dataSource: DataSource) {}
 
   async transferCredits(senderId: string, receiverId: string, amount: number, concept: string, serviceId?: string) {
-    if (amount <= 0) throw new BadRequestException('La cantidad debe ser mayor a cero.');
+    if (amount < 0) throw new BadRequestException('La cantidad debe ser mayor a cero.');
     if (senderId === receiverId) throw new BadRequestException('No puedes pagarte a ti mismo.');
 
     const queryRunner = this.dataSource.createQueryRunner();

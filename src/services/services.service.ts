@@ -4,12 +4,13 @@ import { Repository } from 'typeorm';
 import { Service, ServiceStatus } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class ServicesService {
   constructor(
     @InjectRepository(Service)
-    private servicesRepository: Repository<Service>,
+    private servicesRepository: Repository<Service>, private transactionsService: TransactionsService,
   ) {}
 
   async create(createServiceDto: CreateServiceDto, providerId: string): Promise<Service> {
@@ -73,12 +74,41 @@ export class ServicesService {
   }
 
   async remove(id: string, userId: string, role: string): Promise<void> {
-    const service = await this.findOne(id);
+    // Buscamos el servicio incluyendo la relación con el proveedor para obtener su ID
+    const service = await this.servicesRepository.findOne({
+      where: { id },
+      relations: ['provider']
+    });
 
+    // 1. Verificación de existencia
+    if (!service) {
+      throw new NotFoundException('Servicio no encontrado');
+    }
+
+    // 2. Verificación de permisos: Solo el dueño o un admin pueden eliminar
     if (service.provider.id !== userId && role !== 'admin') {
       throw new ForbiddenException('No tienes permiso para eliminar este servicio.');
     }
-    
+
+    // 3. LÓGICA DE LOG DE MODERACIÓN
+    // Si el que elimina es ADMIN y no es el propio dueño del servicio, generamos el log
+    // En services.service.ts (Línea 97 en adelante)
+        if (role === 'admin' && service.provider.id !== userId) {
+          try {
+            await this.transactionsService.transferCredits(
+              userId,             // senderId (Admin)
+              service.provider.id!, // ! -> Aseguramos que existe
+              0,                  // (Recuerda haber cambiado el "amount < 0" en el otro archivo)
+              `MODERATION: The service "${service.title}" was removed by an admin.`,
+              service.id!         // ! -> Aseguramos que existe
+            );
+          } catch (error: any) { // : any -> Para poder acceder a .message sin error
+            console.error('Error al crear el log de moderación:', error.message);
+          }
+        }
+
+    // 4. Borrado lógico (Soft Delete)
+    // Cambiamos el estado a CANCELLED para que desaparezca del marketplace pero no de la DB
     service.status = ServiceStatus.CANCELLED;
     await this.servicesRepository.save(service);
   }

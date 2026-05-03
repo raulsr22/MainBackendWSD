@@ -59,4 +59,21 @@ async create(createUserDto: CreateUserDto): Promise<User> {
     
     return await this.usersRepository.save(user);
   }
+
+  // Añade esto al final de tu UsersService
+  async updateUserRole(id: string, newRole: UserRole, adminId: string): Promise<User> {
+    // Validación de seguridad: un admin no puede quitarse el rango a sí mismo
+    if (id === adminId) {
+      throw new ConflictException('Por seguridad, no puedes cambiar tu propio rol.');
+    }
+
+    const user = await this.usersRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    user.role = newRole;
+    return await this.usersRepository.save(user);
+  }
 }

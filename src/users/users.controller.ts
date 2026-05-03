@@ -4,7 +4,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator'; 
 import { UserRole } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { Patch, Param } from '@nestjs/common';
+import { Patch, Param, Body, Post } from '@nestjs/common';
 
 @Controller('users')
 export class UsersController {
@@ -35,5 +35,19 @@ export class UsersController {
   @Patch(':id/status') // URL: PATCH http://localhost:3000/api/users/:id/status
   async toggleUserStatus(@Param('id') id: string) {
     return this.usersService.toggleUserActiveStatus(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/role') // URL: PATCH http://localhost:3000/api/users/:id/role
+  async updateRole(
+    @Param('id') id: string, 
+    @Body('role') newRole: UserRole, 
+    @Request() req
+  ) {
+    // Extraemos el id del admin autenticado desde el objeto request generado por el Guard
+    const adminId = req.user.userId || req.user.id; 
+    
+    return this.usersService.updateUserRole(id, newRole, adminId);
   }
 }

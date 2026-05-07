@@ -38,22 +38,67 @@ export class RequestsService {
   }
 
   async updateStatus(userId: string, requestId: string, newStatus: RequestStatus) {
-    const request = await this.requestRepo.findOne({ where: { id: requestId }, relations: ['requester', 'provider', 'service', 'review'] });
+    const request = await this.requestRepo.findOne({ 
+      where: { id: requestId }, 
+      relations: ['requester', 'provider', 'service', 'review'] 
+    });
+    
     if (!request) throw new NotFoundException('Solicitud no encontrada');
 
+    // Seguridad: Solo el proveedor puede aceptar o rechazar
     if ((newStatus === RequestStatus.ACCEPTED || newStatus === RequestStatus.REJECTED) && request.provider.id !== userId) {
-      throw new BadRequestException('Solo el proveedor puede aceptar o rechazar');
+      throw new BadRequestException('Solo el proveedor puede aceptar o rechazar esta solicitud');
     }
 
     if (!request.requester?.id || !request.provider?.id || !request.service?.id) {
-      throw new BadRequestException('Incomplete request data: missing IDs for transaction');
+      throw new BadRequestException('Datos incompletos para procesar la notificación');
     }
-    if (newStatus === RequestStatus.COMPLETED && request.status !== RequestStatus.COMPLETED) {
+
+    // --- SISTEMA DE NOTIFICACIONES DIFERENCIADAS ---
+
+    // CASO: ACEPTAR
+    if (newStatus === RequestStatus.ACCEPTED && request.status !== RequestStatus.ACCEPTED) {
+      // 1. Al Cliente (Aviso importante)
+      await this.transactionsService.transferCredits(
+        request.provider.id, request.requester.id, 0, 
+        `NOTIFICATION: Your request for "${request.service.title}" was ACCEPTED!`,
+        request.service.id
+      );
+      
+      const requesterName = request.requester?.fullName || 'the client';
+
       await this.transactionsService.transferCredits(
         request.requester.id, 
-        request.provider.id,  
-        request.agreedPrice,
+        request.provider.id, 
+        0, 
+        `SYSTEM: Success! You have accepted the request from ${requesterName}.`,
+        request.service.id
+      );
+    }
+
+    // CASO: RECHAZAR
+    if (newStatus === RequestStatus.REJECTED && request.status !== RequestStatus.REJECTED) {
+      // Solo notificamos al cliente (el proveedor ya sabe que ha rechazado)
+      await this.transactionsService.transferCredits(
+        request.provider.id, request.requester.id, 0, 
+        `NOTIFICATION: Your request for "${request.service.title}" was REJECTED.`,
+        request.service.id
+      );
+    }
+
+    // CASO: COMPLETAR (Pago + Notificación)
+    if (newStatus === RequestStatus.COMPLETED && request.status !== RequestStatus.COMPLETED) {
+      // Pago real de créditos
+      await this.transactionsService.transferCredits(
+        request.requester.id, request.provider.id, request.agreedPrice,
         `Payment for completed service: ${request.service.title}`,
+        request.service.id
+      );
+
+      // Confirmación final al cliente
+      await this.transactionsService.transferCredits(
+        request.provider.id, request.requester.id, 0, 
+        `NOTIFICATION: Service "${request.service.title}" completed. Credits transferred.`,
         request.service.id
       );
     }

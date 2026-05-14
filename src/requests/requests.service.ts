@@ -54,11 +54,7 @@ export class RequestsService {
       throw new BadRequestException('Datos incompletos para procesar la notificación');
     }
 
-    // --- SISTEMA DE NOTIFICACIONES DIFERENCIADAS ---
-
-    // CASO: ACEPTAR
     if (newStatus === RequestStatus.ACCEPTED && request.status !== RequestStatus.ACCEPTED) {
-      // 1. Al Cliente (Aviso importante)
       await this.transactionsService.transferCredits(
         request.provider.id, request.requester.id, 0, 
         `NOTIFICATION: Your request for "${request.service.title}" was ACCEPTED!`,
@@ -76,9 +72,7 @@ export class RequestsService {
       );
     }
 
-    // CASO: RECHAZAR
     if (newStatus === RequestStatus.REJECTED && request.status !== RequestStatus.REJECTED) {
-      // Solo notificamos al cliente (el proveedor ya sabe que ha rechazado)
       await this.transactionsService.transferCredits(
         request.provider.id, request.requester.id, 0, 
         `NOTIFICATION: Your request for "${request.service.title}" was REJECTED.`,
@@ -86,16 +80,13 @@ export class RequestsService {
       );
     }
 
-    // CASO: COMPLETAR (Pago + Notificación)
     if (newStatus === RequestStatus.COMPLETED && request.status !== RequestStatus.COMPLETED) {
-      // Pago real de créditos
       await this.transactionsService.transferCredits(
         request.requester.id, request.provider.id, request.agreedPrice,
         `Payment for completed service: ${request.service.title}`,
         request.service.id
       );
 
-      // Confirmación final al cliente
       await this.transactionsService.transferCredits(
         request.provider.id, request.requester.id, 0, 
         `NOTIFICATION: Service "${request.service.title}" completed. Credits transferred.`,

@@ -7,19 +7,21 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  // POST /api/payments/checkout -> Para iniciar el proceso de pago con Stripe
   @UseGuards(JwtAuthGuard)
   @Post('checkout')
   async createCheckoutSession(@Request() req, @Body('amount') amount: number) {
     return this.paymentsService.createCheckoutSession(req.user.id, amount);
   }
 
-  // Angular llamará aquí cuando vuelva de Stripe
+  // GET /api/payments/verify -> Para que el cliente verifique el resultado del pago después de volver de Stripe
   @UseGuards(JwtAuthGuard)
   @Get('verify')
   async verifyPayment(@Request() req, @Query('session_id') sessionId: string) {
     return this.paymentsService.verifyPayment(sessionId, req.user.id);
   }
 
+  // POST /api/payments/webhook -> Endpoint público para que Stripe envíe eventos (sin autenticación)
   @Post('webhook')
   async handleStripeWebhook(
     @Headers('stripe-signature') signature: string,

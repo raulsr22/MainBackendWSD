@@ -28,6 +28,7 @@ export class ReviewsController {
     return this.reviewsService.findByService(serviceId);
   }
 
+  // GET /api/reviews/all -> Para que el admin vea todas las reseñas
   @Get('all')
   @UseGuards(JwtAuthGuard)
   async getAllReviews(@Request() req) {
@@ -35,6 +36,7 @@ export class ReviewsController {
     return this.reviewsService.findAll();
   }
 
+  // PATCH /api/reviews/:id/censor -> Para que el admin censure una reseña
   @Patch(':id/censor')
   @UseGuards(JwtAuthGuard)
   async censorReview(@Request() req, @Param('id') id: string) {
@@ -42,6 +44,7 @@ export class ReviewsController {
     return this.reviewsService.censorReview(id);
   }
 
+  // DELETE /api/reviews/:id -> Para que el admin elimine una reseña
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async deleteReview(@Request() req, @Param('id') id: string) {
